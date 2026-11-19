@@ -58,4 +58,10 @@ describe("buildChatSystemPrompt", () => {
       "Pets: permitidos",
     );
   });
+
+  it("gives the host phone formatted, as the page shows it", () => {
+    const prompt = buildChatSystemPrompt(maoProperty, null);
+    expect(prompt).toContain("+55 92 90000-0001");
+    expect(prompt).not.toContain("+5592900000001");
+  });
 });
