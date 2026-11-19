@@ -122,6 +122,10 @@ LLM judge is used only to find places named outside the guide. The MAO001
 guide is a fixed fixture with invented restaurant names; ADC001 runs with no
 guide.
 
+Run it with \`npm run evals\` (needs \`ANTHROPIC_API_KEY\`). \`EVALS_TARGET\`
+sets the pass rate the run must reach, from 0 to 1 (default 0.9); below it,
+the command exits with an error.
+
 ## By rule
 
 | Rule | What it checks | Checked by | Passed |
