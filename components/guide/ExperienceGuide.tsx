@@ -29,6 +29,8 @@ export function ExperienceGuide({
 }: ExperienceGuideProps) {
   const [status, setStatus] = useState<Status>("loading");
   const [guide, setGuide] = useState<ExperienceGuideData | null>(null);
+  // Set when the server refused for a demo limit: retrying won't help.
+  const [limitMessage, setLimitMessage] = useState<string | null>(null);
 
   // Fetch the guide. No synchronous setState here — the first state update
   // happens only after the await resolves, so kicking this off from the mount
@@ -41,6 +43,12 @@ export function ExperienceGuide({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: propertyCode }),
       });
+      if (res.status === 429) {
+        const data: { error?: string } = await res.json();
+        setLimitMessage(data.error ?? "A demo chegou a um limite de uso.");
+        setStatus("error");
+        return;
+      }
       if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
       const data: { guide: ExperienceGuideData } = await res.json();
       setGuide(data.guide);
@@ -88,11 +96,17 @@ export function ExperienceGuide({
 
         {status === "error" && (
           <div className="rounded-lg border border-dashed border-input p-6">
-            <p>O guia da região não carregou.</p>
-            <Button variant="outline" size="sm" className="mt-3" onClick={retry}>
-              <RefreshCw aria-hidden />
-              Tentar de novo
-            </Button>
+            {limitMessage ? (
+              <p>{limitMessage}</p>
+            ) : (
+              <>
+                <p>O guia da região não carregou.</p>
+                <Button variant="outline" size="sm" className="mt-3" onClick={retry}>
+                  <RefreshCw aria-hidden />
+                  Tentar de novo
+                </Button>
+              </>
+            )}
           </div>
         )}
 
