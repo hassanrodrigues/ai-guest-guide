@@ -48,3 +48,6 @@ CLAUDE.md
 AGENTS.md
 .claude/
 guest-guide-prompt.md
+
+# browser automation output
+.playwright-mcp/
