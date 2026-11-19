@@ -42,4 +42,5 @@ docker run -d --name ai-guest-guide-pg -p 5432:5432 \
 - `npm run build`: production build
 - `npm run lint` / `npm run typecheck`
 - `npm test`: unit tests (Vitest)
+- `npm run evals`: checks the chat's 9 rules against the real model and writes [docs/evals.md](docs/evals.md)
 - `npm run db:reset`: drop, migrate and seed the database
