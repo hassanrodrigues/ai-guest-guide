@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { PROPERTY_CODE_REGEX } from "@/lib/constants";
-import { AIGenerationError, PropertyNotFoundError } from "@/lib/errors";
+import {
+  AIGenerationError,
+  PropertyNotFoundError,
+  UsageLimitError,
+} from "@/lib/errors";
 import { getOrGenerate } from "@/lib/services/guide.service";
+import { clientIp } from "@/lib/services/usage.service";
 
 // Prisma + the AI SDK require the Node.js runtime (not edge). Generation can
 // take longer than the default function budget, so raise the ceiling.
@@ -33,9 +38,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const guide = await getOrGenerate(code);
+    const guide = await getOrGenerate(code, clientIp(request.headers));
     return NextResponse.json({ guide });
   } catch (error) {
+    if (error instanceof UsageLimitError) {
+      return NextResponse.json({ error: error.message }, { status: 429 });
+    }
     if (error instanceof PropertyNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
