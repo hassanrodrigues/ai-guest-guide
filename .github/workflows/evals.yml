@@ -1,0 +1,36 @@
+name: Evals
+
+# Manual only: every run calls the paid model API.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Pass rate the run must reach, from 0 to 1
+        default: "0.9"
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    name: Chat rules against the real model
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run evals
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EVALS_TARGET: ${{ inputs.target }}
+      - name: Show the report in the run summary
+        if: always()
+        run: cat docs/evals.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evals-report
+          path: docs/evals.md
