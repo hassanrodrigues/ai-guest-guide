@@ -12,6 +12,7 @@ import {
 import type { ExperienceGuide } from "@/lib/ai/schemas";
 import { getOrGenerate } from "@/lib/services/guide.service";
 import { findByCode } from "@/lib/services/property.service";
+import { clientIp } from "@/lib/services/usage.service";
 
 // Prisma + Anthropic need the Node.js runtime; a first-time guide generation
 // can be slow, so raise the budget.
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
     // can't be produced, the assistant still works from the property data.
     let guide: ExperienceGuide | null = null;
     try {
-      guide = await getOrGenerate(code);
+      guide = await getOrGenerate(code, clientIp(request.headers));
     } catch (error) {
       console.warn(
         `[chat] guide unavailable for ${code}; answering from property data only.`,
