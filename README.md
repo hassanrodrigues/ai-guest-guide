@@ -4,7 +4,7 @@ A guest guide for each short-term rental property, with the stay details, a
 local guide written by AI and a chat that answers only from the property's
 data.
 
-**Live demo:** _link added after the deploy_
+**Live demo:** https://ai-guest-guide.vercel.app
 
 <!-- DEMO GIF: record the property page and the chat, save it as
 docs/demo.gif and replace this comment with:
@@ -37,8 +37,9 @@ writes the descriptions and estimates distances, but it can't add a place.
 
 Without the key, or when Places fails, the model uses what it knows, under a
 stricter prompt that tells it to leave a place out when it isn't sure. That
-still works, but in smaller cities it can make up plausible names, so the demo
-runs with the key.
+still works, but in smaller cities it can make up plausible names. The live
+demo runs without a Places key for now, so its guides, especially for the
+smaller towns, may list places that don't exist.
 
 ### The chat
 
@@ -177,6 +178,8 @@ The full reasoning is in [docs/decisions.md](docs/decisions.md). In short:
 
 ## Limitations and next steps
 
+- The live demo has no Google Places key yet. Adding one and regenerating the
+  guides ([docs/deploy.md](docs/deploy.md)) would ground them in real venues.
 - The guide and the chat are only in Portuguese; tourists would need English
   and Spanish versions.
 - There is no host dashboard: properties come from the seed script.

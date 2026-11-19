@@ -54,7 +54,9 @@ optionally, a Google Cloud key with **Places API (New)** enabled.
    ```
 
    Each request takes 20 to 30 seconds and counts against the per-IP limit
-   of 5 generations a day; four fit.
+   of 5 generations a day. Four fit, as long as nobody on the same network
+   opens the pages while they generate: a guide still being generated can be
+   generated twice.
 
 ## Checking the limits in production
 
@@ -88,6 +90,22 @@ Keep database branching for preview deployments on in the Neon integration
 settings, so preview builds migrate and seed their own branch instead of the
 production database. Previews are behind Vercel Authentication by default,
 so the public can't spend the API key through them.
+
+## Adding the Places key later
+
+Guides generated without `GOOGLE_PLACES_API_KEY` stay cached, so adding the
+key doesn't change them by itself.
+
+1. Add `GOOGLE_PLACES_API_KEY` for Production and redeploy.
+2. In the Neon console's SQL editor, drop the cached guides and today's
+   generation counters:
+
+   ```sql
+   DELETE FROM generated_guides;
+   DELETE FROM usage_counters WHERE key LIKE 'guide:%';
+   ```
+
+3. Generate the four guides again, as in step 5 of the first deploy.
 
 ## If a preview build fails at `prisma migrate deploy`
 
