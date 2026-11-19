@@ -2,16 +2,11 @@ import { MapPin, Phone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { PropertyAddress, PropertyHost } from "@/lib/types/property";
+import { formatPhone } from "@/lib/utils";
 
 interface ContactSectionProps {
   host: PropertyHost;
   address: PropertyAddress;
-}
-
-/** "+5592900000001" -> "+55 92 90000-0001". Leaves other formats untouched. */
-function formatPhone(phone: string): string {
-  const match = phone.match(/^\+55(\d{2})(\d{4,5})(\d{4})$/);
-  return match ? `+55 ${match[1]} ${match[2]}-${match[3]}` : phone;
 }
 
 export function ContactSection({ host, address }: ContactSectionProps) {

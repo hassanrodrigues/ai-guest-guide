@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import type { UIMessage } from "ai";
 
 import { Message } from "@/components/chat/Message";
+import { messageText } from "@/lib/chat-messages";
 
 interface MessageListProps {
   messages: UIMessage[];
@@ -15,14 +16,6 @@ interface MessageListProps {
 
 /** Treat the user as "at the bottom" within this many px of the end. */
 const BOTTOM_THRESHOLD_PX = 50;
-
-/** Concatenate the text parts of a v6 UIMessage. */
-function messageText(message: UIMessage): string {
-  return message.parts
-    .filter((part): part is { type: "text"; text: string } => part.type === "text")
-    .map((part) => part.text)
-    .join("");
-}
 
 function TypingIndicator() {
   return (
