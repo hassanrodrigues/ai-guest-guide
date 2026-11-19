@@ -34,6 +34,7 @@ docker run -d --name ai-guest-guide-pg -p 5432:5432 \
 | `DATABASE_URL` | yes | PostgreSQL connection string |
 | `ANTHROPIC_API_KEY` | yes | Guide generation and chat |
 | `GOOGLE_PLACES_API_KEY` | no | Grounds the local guide in real places from Google Places |
+| `DAILY_TOKEN_BUDGET` | no | Tokens the whole app may spend per day (UTC) before the guide and chat stop calling the model. Default: 500000 |
 
 ## Scripts
 
