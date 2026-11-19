@@ -7,14 +7,14 @@ import { maoProperty, sampleGuide } from "../fixtures/property";
 const {
   streamText,
   findByCode,
-  getOrGenerate,
+  getCachedGuide,
   consumeIpQuota,
   isOverDailyBudget,
   recordTokens,
 } = vi.hoisted(() => ({
   streamText: vi.fn(),
   findByCode: vi.fn(),
-  getOrGenerate: vi.fn(),
+  getCachedGuide: vi.fn(),
   consumeIpQuota: vi.fn(),
   isOverDailyBudget: vi.fn(),
   recordTokens: vi.fn(),
@@ -27,7 +27,7 @@ vi.mock("ai", async (importOriginal) => ({
 }));
 vi.mock("@ai-sdk/anthropic", () => ({ anthropic: vi.fn(() => "mock-model") }));
 vi.mock("@/lib/services/property.service", () => ({ findByCode }));
-vi.mock("@/lib/services/guide.service", () => ({ getOrGenerate }));
+vi.mock("@/lib/services/guide.service", () => ({ getCachedGuide }));
 vi.mock("@/lib/services/usage.service", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/services/usage.service")>()),
   consumeIpQuota,
@@ -52,7 +52,7 @@ beforeEach(() => {
     toUIMessageStreamResponse: () => new Response("model reply"),
   });
   findByCode.mockReset().mockResolvedValue(maoProperty);
-  getOrGenerate.mockReset().mockResolvedValue(sampleGuide);
+  getCachedGuide.mockReset().mockResolvedValue(sampleGuide);
   consumeIpQuota.mockReset().mockResolvedValue(true);
   isOverDailyBudget.mockReset().mockResolvedValue(false);
   recordTokens.mockReset().mockResolvedValue(undefined);
@@ -64,7 +64,7 @@ describe("POST /api/chat limits", () => {
 
     expect(await res.text()).toBe("model reply");
     expect(consumeIpQuota).toHaveBeenCalledWith("chat", "203.0.113.7", 40);
-    expect(getOrGenerate).toHaveBeenCalledWith("MAO001", "203.0.113.7");
+    expect(getCachedGuide).toHaveBeenCalledWith("MAO001");
   });
 
   it("replies that the daily budget is spent, without calling the model", async () => {
@@ -86,7 +86,7 @@ describe("POST /api/chat limits", () => {
 
     expect(await res.text()).toContain("limite de 40 perguntas por dia");
     expect(streamText).not.toHaveBeenCalled();
-    expect(getOrGenerate).not.toHaveBeenCalled();
+    expect(getCachedGuide).not.toHaveBeenCalled();
   });
 
   it("refuses a question over the size limit before touching the database", async () => {

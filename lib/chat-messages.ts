@@ -33,13 +33,11 @@ export function toTextMessages(raw: unknown): UIMessage[] {
   });
 }
 
-const formatCount = (n: number) => n.toLocaleString("pt-BR");
-
 /** The guest-facing reason this conversation can't go to the model, or null when it can. */
 export function conversationLimitReply(messages: UIMessage[]): string | null {
   const last = messages.at(-1);
   if (last && messageText(last).length > MAX_USER_MESSAGE_LENGTH) {
-    return `Sua mensagem passou de ${formatCount(MAX_USER_MESSAGE_LENGTH)} caracteres. Escreva uma pergunta mais curta.`;
+    return `Sua mensagem passou de ${MAX_USER_MESSAGE_LENGTH.toLocaleString("pt-BR")} caracteres. Escreva uma pergunta mais curta.`;
   }
 
   const questions = messages.filter((m) => m.role === "user").length;

@@ -13,7 +13,6 @@ const {
   guideFindUnique,
   guideUpsert,
   propertyFindUnique,
-  executeRaw,
   generateObject,
   findRealPlaces,
   consumeIpQuota,
@@ -23,7 +22,6 @@ const {
   guideFindUnique: vi.fn(),
   guideUpsert: vi.fn(),
   propertyFindUnique: vi.fn(),
-  executeRaw: vi.fn(),
   generateObject: vi.fn(),
   findRealPlaces: vi.fn(),
   consumeIpQuota: vi.fn(),
@@ -31,16 +29,12 @@ const {
   recordTokens: vi.fn(),
 }));
 
-vi.mock("@/lib/db", () => {
-  const prisma = {
+vi.mock("@/lib/db", () => ({
+  prisma: {
     generatedGuide: { findUnique: guideFindUnique, upsert: guideUpsert },
     property: { findUnique: propertyFindUnique },
-    $executeRaw: executeRaw,
-    // The interactive transaction runs its callback against the same mocks.
-    $transaction: (fn: (tx: unknown) => unknown) => fn(prisma),
-  };
-  return { prisma };
-});
+  },
+}));
 vi.mock("ai", () => ({
   generateObject,
   NoObjectGeneratedError: {
@@ -62,7 +56,6 @@ beforeEach(() => {
   guideFindUnique.mockReset();
   guideUpsert.mockReset().mockResolvedValue(undefined);
   propertyFindUnique.mockReset().mockResolvedValue(maoProperty);
-  executeRaw.mockReset().mockResolvedValue(1);
   generateObject.mockReset();
   findRealPlaces.mockReset().mockResolvedValue([]);
   consumeIpQuota.mockReset().mockResolvedValue(true);
@@ -145,26 +138,12 @@ describe("guideService.getOrGenerate", () => {
     );
   });
 
-  it("serves a cache hit without touching any limit or the lock", async () => {
+  it("serves a cache hit without touching any limit", async () => {
     guideFindUnique.mockResolvedValue({ content: sampleGuide });
 
     await getOrGenerate("MAO001", IP);
 
     expect(isOverDailyBudget).not.toHaveBeenCalled();
-    expect(consumeIpQuota).not.toHaveBeenCalled();
-    expect(executeRaw).not.toHaveBeenCalled();
-  });
-
-  it("does not generate again when a concurrent request saved the guide while it waited on the lock", async () => {
-    guideFindUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ content: sampleGuide });
-
-    const result = await getOrGenerate("MAO001", IP);
-
-    expect(result).toEqual(sampleGuide);
-    expect(executeRaw).toHaveBeenCalledTimes(1);
-    expect(generateObject).not.toHaveBeenCalled();
     expect(consumeIpQuota).not.toHaveBeenCalled();
   });
 

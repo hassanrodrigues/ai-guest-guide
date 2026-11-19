@@ -28,12 +28,6 @@ import {
   recordTokens,
 } from "@/lib/services/usage.service";
 
-// A first generation takes 20-30 s; a second request for the same property
-// waits on the lock for that long before it reads the fresh cache.
-const GENERATION_TX_TIMEOUT_MS = 90_000;
-
-type Db = Pick<Prisma.TransactionClient, "generatedGuide">;
-
 /**
  * Fetch real venues to ground generation. Returns undefined (triggering
  * fallback mode) if the Places API is unavailable for any reason — a missing
@@ -62,12 +56,15 @@ async function fetchGrounding(
 }
 
 /**
- * The cached guide, or null when there is none. The cached JSON is re-validated
- * against the current schema rather than trusted blindly: the schema can evolve,
- * so a stale row is treated as missing and regenerated.
+ * The cached guide for an (already normalized) code, or null when there is
+ * none. Never calls the model. The cached JSON is re-validated against the
+ * current schema rather than trusted blindly: the schema can evolve, so a
+ * stale row is treated as missing and regenerated.
  */
-async function readCache(db: Db, code: string): Promise<ExperienceGuide | null> {
-  const cached = await db.generatedGuide.findUnique({
+export async function getCachedGuide(
+  code: string,
+): Promise<ExperienceGuide | null> {
+  const cached = await prisma.generatedGuide.findUnique({
     where: { propertyCode: code },
   });
   if (!cached) return null;
@@ -91,7 +88,7 @@ async function assertCanGenerate(ip: string): Promise<void> {
 }
 
 /** Generate a fresh guide for an (already normalized) code and persist it. */
-async function generateAndPersist(db: Db, code: string): Promise<ExperienceGuide> {
+async function generateAndPersist(code: string): Promise<ExperienceGuide> {
   // findByCode normalizes + validates the code and returns null when missing.
   const property = await findByCode(code);
   if (!property) {
@@ -127,7 +124,7 @@ async function generateAndPersist(db: Db, code: string): Promise<ExperienceGuide
     );
   }
 
-  await db.generatedGuide.upsert({
+  await prisma.generatedGuide.upsert({
     where: { propertyCode: code },
     create: {
       propertyCode: code,
@@ -159,21 +156,10 @@ export async function getOrGenerate(
 ): Promise<ExperienceGuide> {
   const code = propertyCode.trim().toUpperCase();
 
-  const cached = await readCache(prisma, code);
+  const cached = await getCachedGuide(code);
   if (cached) return cached;
 
-  // The page and the chat can both miss the cache at once on a first visit.
-  // A per-property advisory lock makes the second request wait and then read
-  // the guide the first one just saved, instead of generating it again.
-  return prisma.$transaction(
-    async (tx) => {
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${code}))`;
-      const fresh = await readCache(tx, code);
-      if (fresh) return fresh;
-
-      await assertCanGenerate(ip);
-      return generateAndPersist(tx, code);
-    },
-    { timeout: GENERATION_TX_TIMEOUT_MS },
-  );
+  // ponytail: two first visits to the same property at the same moment both generate; add a per-property lock if the token counter ever shows it.
+  await assertCanGenerate(ip);
+  return generateAndPersist(code);
 }

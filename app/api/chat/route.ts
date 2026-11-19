@@ -17,8 +17,7 @@ import {
   CHAT_TEMPERATURE,
   PROPERTY_CODE_REGEX,
 } from "@/lib/constants";
-import type { ExperienceGuide } from "@/lib/ai/schemas";
-import { getOrGenerate } from "@/lib/services/guide.service";
+import { getCachedGuide } from "@/lib/services/guide.service";
 import { findByCode } from "@/lib/services/property.service";
 import {
   clientIp,
@@ -100,17 +99,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // The guide enriches answers about the region but isn't required — if it
-    // can't be produced, the assistant still works from the property data.
-    let guide: ExperienceGuide | null = null;
-    try {
-      guide = await getOrGenerate(code, ip);
-    } catch (error) {
-      console.warn(
-        `[chat] guide unavailable for ${code}; answering from property data only.`,
-        error instanceof Error ? error.message : error,
-      );
-    }
+    // Only the guide route generates guides. Until the page has generated
+    // this one, the assistant answers from the property data alone.
+    const guide = await getCachedGuide(code);
 
     const result = streamText({
       model: anthropic(AI_MODEL),
