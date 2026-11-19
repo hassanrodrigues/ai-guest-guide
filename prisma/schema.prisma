@@ -57,3 +57,13 @@ model GeneratedGuide {
 
   @@map("generated_guides")
 }
+
+// Daily usage counters for the public demo's cost limits, one row per key:
+// "chat:<ip hash>:<day>", "guide:<ip hash>:<day>" and "tokens:<day>". Kept in
+// Postgres so every server instance shares the same counts.
+model UsageCounter {
+  key   String @id
+  count Int    @default(0)
+
+  @@map("usage_counters")
+}

@@ -38,3 +38,11 @@ export class PlacesApiError extends Error {
     this.name = "PlacesApiError";
   }
 }
+
+/** A demo cost limit was reached; `message` is shown to the guest as is. Maps to 429. */
+export class UsageLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UsageLimitError";
+  }
+}

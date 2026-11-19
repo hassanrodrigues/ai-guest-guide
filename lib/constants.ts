@@ -18,3 +18,14 @@ export const PROPERTY_CODE_REGEX = /^[A-Z]{2,3}\d{3}$/;
 
 /** Max length of a single user chat message, enforced client- and server-side. */
 export const MAX_USER_MESSAGE_LENGTH = 1000;
+
+/**
+ * Cost limits for the public demo. Every counter is daily and resets at
+ * 00:00 UTC; the token budget comes from DAILY_TOKEN_BUDGET.
+ */
+export const CHAT_MESSAGES_PER_IP_PER_DAY = 40;
+export const CHAT_MESSAGES_PER_CONVERSATION = 20;
+/** Caps the history a client sends back, so a forged long history can't inflate input tokens. */
+export const MAX_CONVERSATION_CHARS = 50_000;
+export const GUIDE_GENERATIONS_PER_IP_PER_DAY = 5;
+export const DEFAULT_DAILY_TOKEN_BUDGET = 500_000;
