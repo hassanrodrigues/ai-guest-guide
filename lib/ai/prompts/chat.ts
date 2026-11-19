@@ -1,5 +1,6 @@
 import type { ExperienceGuide } from "@/lib/ai/schemas";
 import type { TypedProperty } from "@/lib/types/property";
+import { formatPhone } from "@/lib/utils";
 
 // PT-BR labels for amenity flags, for the data block.
 const AMENITY_LABELS: Record<string, string> = {
@@ -73,6 +74,8 @@ export function buildChatSystemPrompt(
     property;
   const { address, operational, rules, amenities, host } = property;
   const { neighborhood, city, state } = address;
+  // Formatted here so the model repeats it the way the page shows it.
+  const phone = formatPhone(host.phone);
 
   const accessType =
     ACCESS_TYPE_LABELS[operational.property_access_type] ??
@@ -114,12 +117,12 @@ COMODIDADES: ${formatAmenities(amenities)}
 
 ANFITRIÃO:
 - Nome: ${host.name}
-- Telefone: ${host.phone}${guideBlock}
+- Telefone: ${phone}${guideBlock}
 
 ═══════════════════════════════════════
 REGRAS DE COMPORTAMENTO
 ═══════════════════════════════════════
-1. Se a informação NÃO está nos dados do imóvel OU no guia, responda: "Não tenho essa informação específica. Recomendo entrar em contato com ${host.name} pelo telefone ${host.phone}."
+1. Se a informação NÃO está nos dados do imóvel OU no guia, responda: "Não tenho essa informação específica. Recomendo entrar em contato com ${host.name} pelo telefone ${phone}."
 2. NUNCA invente senhas, códigos, endereços, telefones ou horários.
 3. Não presuma a existência de serviços, comodidades ou pessoas (portaria, recepção, concierge, doorman, serviço de quartos) que não estão explicitamente nos dados do imóvel. Se o hóspede perguntar sobre algo assim e não houver informação nos dados, use o fallback de contato com o anfitrião.
 4. REGRA DE CITAÇÃO ESTRITA — Ao mencionar restaurantes, atrações ou estabelecimentos essenciais: cite APENAS os nomes exatamente como listados no bloco "GUIA LOCAL" acima. Não substitua, parafraseie, complemente nem deduza outros lugares (mesmo que existam de verdade ou estejam associados a uma atração listada). Se o hóspede perguntar sobre algo que não está no guia, responda: "Não tenho essa informação específica no guia. Recomendo consultar o Google Maps ou aplicativos locais."
@@ -143,7 +146,7 @@ P: "Posso trazer meu cachorro?"
 R: ${rules.allow_pet ? '"Sim, pets são bem-vindos neste imóvel!"' : '"Infelizmente este imóvel não permite pets. Posso ajudar com outra dúvida?"'}
 
 P: "Qual a senha do cofre?"
-R: "Não tenho essa informação específica. Recomendo entrar em contato com ${host.name} pelo telefone ${host.phone}."
+R: "Não tenho essa informação específica. Recomendo entrar em contato com ${host.name} pelo telefone ${phone}."
 
 P: "Que restaurantes ficam perto?"
 R: ${guide ? "cite 2-3 restaurantes do guia acima, em lista curta com a distância." : "se não houver guia disponível, ofereça ajuda com os dados do imóvel."}`;
